@@ -26,11 +26,58 @@ defmodule Taxo do
 
       iex> Taxo.new |> Taxo.derive(:monkey, :mammal) |> Taxo.derive(:mammal, :vertebrate) |> Taxo.is_a?(:monkey, :vertebrate)
       true
+
+      iex> Taxo.new |> Taxo.derive(:monkey, :mammal) |> Taxo.derive(:mammal, :vertebrate) |> Taxo.is_a?(:vertebrate, :monkey)
+      false
+
   """
   def is_a?(taxo, child, parent) do
     Map.get(taxo, :ancestors, %{})
     |> Map.get(child, MapSet.new())
     |> MapSet.member?(parent)
+  end
+
+  @doc """
+    Returns the descendants of a given `subject` in the taxonomy `taxo`.
+
+    ## Examples
+
+        iex> Taxo.new |> Taxo.derive(:monkey, :mammal) |> Taxo.descendants(:mammal)
+        MapSet.new([:monkey])
+  """
+  def descendants(taxo, subject) do
+    taxo
+    |> Map.get(:descendants, %{})
+    |> Map.get(subject, MapSet.new())
+  end
+
+  @doc """
+    Returns the ancestors of a given `subject` in the taxonomy `taxo`.
+
+    ## Examples
+
+        iex> Taxo.new |> Taxo.derive(:monkey, :mammal) |> Taxo.ancestors(:monkey)
+        MapSet.new([:mammal])
+  """
+  def ancestors(taxo, subject) do
+    taxo
+    |> Map.get(:ancestors, %{})
+    |> Map.get(subject, MapSet.new())
+  end
+
+  @doc """
+    Returns the parents of a given `subject` in the taxonomy `taxo`.
+
+    ## Examples
+
+        iex> Taxo.new |> Taxo.derive(:monkey, :mammal) |> Taxo.parents(:monkey)
+        MapSet.new([:mammal])
+
+  """
+  def parents(taxo, subject) do
+    taxo
+    |> Map.get(:parents, %{})
+    |> Map.get(subject, MapSet.new())
   end
 
   @doc """
@@ -60,12 +107,12 @@ defmodule Taxo do
     if Map.get(tp, child, MapSet.new()) |> MapSet.member?(parent) do
       taxo
     else
-      new_parents_for_tag =
+      new_parents_for_child =
         tp
         |> Map.get(child, MapSet.new())
         |> MapSet.put(parent)
 
-      new_parents = Map.put(tp, child, new_parents_for_tag)
+      new_parents = Map.put(tp, child, new_parents_for_child)
       new_ancestors = do_transform_derived(ta, child, td, parent, ta)
       new_descendants = do_transform_derived(td, parent, ta, child, td)
 

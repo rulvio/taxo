@@ -1,6 +1,6 @@
 # Taxo
 
-**TODO: Add description**
+Taxo is an Elixir port of the Clojure hierarchies provided by `derive` and `underive`.
 
 ## Installation
 
@@ -18,4 +18,3 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/taxo>.
-
