@@ -38,35 +38,35 @@ defmodule Taxo do
   end
 
   @doc """
-    Returns the descendants of a given `subject` in the taxonomy `taxo`.
+    Returns the descendants of a given `child` in the taxonomy `taxo`.
 
     ## Examples
 
         iex> Taxo.new |> Taxo.derive(:monkey, :mammal) |> Taxo.descendants(:mammal)
         MapSet.new([:monkey])
   """
-  def descendants(taxo, subject) do
+  def descendants(taxo, child) do
     taxo
     |> Map.get(:descendants, %{})
-    |> Map.get(subject, MapSet.new())
+    |> Map.get(child, MapSet.new())
   end
 
   @doc """
-    Returns the ancestors of a given `subject` in the taxonomy `taxo`.
+    Returns the ancestors of a given `child` in the taxonomy `taxo`.
 
     ## Examples
 
         iex> Taxo.new |> Taxo.derive(:monkey, :mammal) |> Taxo.ancestors(:monkey)
         MapSet.new([:mammal])
   """
-  def ancestors(taxo, subject) do
+  def ancestors(taxo, child) do
     taxo
     |> Map.get(:ancestors, %{})
-    |> Map.get(subject, MapSet.new())
+    |> Map.get(child, MapSet.new())
   end
 
   @doc """
-    Returns the parents of a given `subject` in the taxonomy `taxo`.
+    Returns the parents of a given `child` in the taxonomy `taxo`.
 
     ## Examples
 
@@ -74,10 +74,10 @@ defmodule Taxo do
         MapSet.new([:mammal])
 
   """
-  def parents(taxo, subject) do
+  def parents(taxo, child) do
     taxo
     |> Map.get(:parents, %{})
-    |> Map.get(subject, MapSet.new())
+    |> Map.get(child, MapSet.new())
   end
 
   @doc """

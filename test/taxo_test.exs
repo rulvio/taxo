@@ -22,6 +22,24 @@ defmodule TaxoTest do
            |> Taxo.is_a?(:vertebrate, :monkey) == false
   end
 
+  test "return descendants" do
+    assert Taxo.new()
+           |> Taxo.derive(:monkey, :mammal)
+           |> Taxo.descendants(:mammal) == MapSet.new([:monkey])
+  end
+
+  test "return ancestors" do
+    assert Taxo.new()
+           |> Taxo.derive(:monkey, :mammal)
+           |> Taxo.ancestors(:monkey) == MapSet.new([:mammal])
+  end
+
+  test "return parents" do
+    assert Taxo.new()
+           |> Taxo.derive(:monkey, :mammal)
+           |> Taxo.parents(:monkey) == MapSet.new([:mammal])
+  end
+
   test "derive child parent relationship in taxonomy" do
     taxonomy = %Taxo{
       ancestors: %{
