@@ -1,6 +1,6 @@
 # Taxo
 
-[![Elixir CI](https://github.com/rulvio/taxo/actions/workflows/elixir.yml/badge.svg)](https://github.com/rulvio/taxo/actions/workflows/elixir.yml)
+[![CI](https://github.com/rulvio/taxo/actions/workflows/ci.yml/badge.svg)](https://github.com/rulvio/taxo/actions/workflows/ci.yml)
 
 Taxo builds and queries tag hierarchies in Elixir. It ports the `derive` and
 `underive` functions from Clojure's hierarchy system.
