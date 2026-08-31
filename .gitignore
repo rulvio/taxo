@@ -25,3 +25,6 @@ taxo-*.tar
 # IntelliJ Idea
 .idea/
 *.iml
+
+# Dialyzer PLT cache
+/priv/plts/

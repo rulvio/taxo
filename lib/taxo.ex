@@ -5,6 +5,15 @@ defmodule Taxo do
 
   defstruct ancestors: %{}, parents: %{}, descendants: %{}
 
+  @typedoc "A node in a taxonomy. Can be any term, and is used as a map key."
+  @type tag :: term()
+
+  @type t :: %__MODULE__{
+          ancestors: %{tag() => MapSet.t(tag())},
+          parents: %{tag() => MapSet.t(tag())},
+          descendants: %{tag() => MapSet.t(tag())}
+        }
+
   @doc """
   Create a new taxonomy to store the `:parents`, `:ancestors` and `:descendants` of
   parent/child relationships, updated via `derive` and `underive`.
@@ -15,6 +24,7 @@ defmodule Taxo do
       iex> Taxo.new
       %Taxo{ancestors: %{}, parents: %{}, descendants: %{}}
   """
+  @spec new() :: t()
   def new do
     %Taxo{}
   end
@@ -31,8 +41,9 @@ defmodule Taxo do
       false
 
   """
-  def is_a?(taxo, child, parent) do
-    Map.get(taxo, :ancestors, %{})
+  @spec is_a?(t(), tag(), tag()) :: boolean()
+  def is_a?(%Taxo{} = taxo, child, parent) do
+    taxo.ancestors
     |> Map.get(child, MapSet.new())
     |> MapSet.member?(parent)
   end
@@ -45,10 +56,9 @@ defmodule Taxo do
         iex> Taxo.new |> Taxo.derive(:monkey, :mammal) |> Taxo.descendants(:mammal)
         MapSet.new([:monkey])
   """
-  def descendants(taxo, child) do
-    taxo
-    |> Map.get(:descendants, %{})
-    |> Map.get(child, MapSet.new())
+  @spec descendants(t(), tag()) :: MapSet.t(tag())
+  def descendants(%Taxo{} = taxo, child) do
+    Map.get(taxo.descendants, child, MapSet.new())
   end
 
   @doc """
@@ -59,10 +69,9 @@ defmodule Taxo do
         iex> Taxo.new |> Taxo.derive(:monkey, :mammal) |> Taxo.ancestors(:monkey)
         MapSet.new([:mammal])
   """
-  def ancestors(taxo, child) do
-    taxo
-    |> Map.get(:ancestors, %{})
-    |> Map.get(child, MapSet.new())
+  @spec ancestors(t(), tag()) :: MapSet.t(tag())
+  def ancestors(%Taxo{} = taxo, child) do
+    Map.get(taxo.ancestors, child, MapSet.new())
   end
 
   @doc """
@@ -74,15 +83,17 @@ defmodule Taxo do
         MapSet.new([:mammal])
 
   """
-  def parents(taxo, child) do
-    taxo
-    |> Map.get(:parents, %{})
-    |> Map.get(child, MapSet.new())
+  @spec parents(t(), tag()) :: MapSet.t(tag())
+  def parents(%Taxo{} = taxo, child) do
+    Map.get(taxo.parents, child, MapSet.new())
   end
 
   @doc """
   Establish a parent/child relationship in `taxo` between `child` and `parent`.
   Updates `:parents`, then transitively updates `:ancestors` and `:descendants`.
+
+  Raises `Taxo.CyclicDerivationError` if `parent` is already a descendant of
+  `child`, since adding the relationship would create a cycle.
 
   ## Examples
 
@@ -93,28 +104,29 @@ defmodule Taxo do
         descendants: %{mammal: MapSet.new([:monkey])}
       }
   """
-  def derive(taxo, child, parent) do
-    do_validate_input(taxo, child, parent)
+  @spec derive(t(), tag(), tag()) :: t()
+  def derive(%Taxo{} = taxo, child, parent) do
+    do_validate_input(child, parent)
 
     if Taxo.is_a?(taxo, parent, child) do
-      raise "Cyclic derivation: #{inspect(parent)} has #{inspect(child)} as ancestor"
+      raise Taxo.CyclicDerivationError, child: child, parent: parent
     end
 
-    tp = Map.get(taxo, :parents, %{})
-    td = Map.get(taxo, :descendants, %{})
-    ta = Map.get(taxo, :ancestors, %{})
-
-    if Map.get(tp, child, MapSet.new()) |> MapSet.member?(parent) do
+    if MapSet.member?(Map.get(taxo.parents, child, MapSet.new()), parent) do
       taxo
     else
       new_parents_for_child =
-        tp
+        taxo.parents
         |> Map.get(child, MapSet.new())
         |> MapSet.put(parent)
 
-      new_parents = Map.put(tp, child, new_parents_for_child)
-      new_ancestors = do_transform_derived(ta, child, td, parent, ta)
-      new_descendants = do_transform_derived(td, parent, ta, child, td)
+      new_parents = Map.put(taxo.parents, child, new_parents_for_child)
+
+      new_ancestors =
+        do_transform_derived(taxo.ancestors, child, taxo.descendants, parent, taxo.ancestors)
+
+      new_descendants =
+        do_transform_derived(taxo.descendants, parent, taxo.ancestors, child, taxo.descendants)
 
       %Taxo{parents: new_parents, ancestors: new_ancestors, descendants: new_descendants}
     end
@@ -124,29 +136,34 @@ defmodule Taxo do
   Removes a parent/child relationship in `taxo` between `child` and `parent`.
   Updates `:parents`, then transitively updates `:ancestors` and `:descendants`.
 
+  This works by dropping the `child`/`parent` edge and rebuilding the whole
+  taxonomy from the remaining parent/child pairs, calling `derive/3` on each
+  one in turn. Cost is proportional to the size of the taxonomy, not just to
+  the edge being removed, so `underive/3` is not a cheap operation on a large
+  hierarchy.
+
   ## Examples
 
-      iex> Taxo.derive(%{}, :monkey, :mammal) |> Taxo.underive(:monkey, :mammal)
+      iex> Taxo.new |> Taxo.derive(:monkey, :mammal) |> Taxo.underive(:monkey, :mammal)
       %Taxo{ancestors: %{}, parents: %{}, descendants: %{}}
 
   """
-  def underive(taxo, child, parent) do
-    do_validate_input(taxo, child, parent)
-
-    parent_map = Map.get(taxo, :parents, %{})
+  @spec underive(t(), tag(), tag()) :: t()
+  def underive(%Taxo{} = taxo, child, parent) do
+    do_validate_input(child, parent)
 
     # Remove `parent` from `child`'s set of direct parents.
     child_parents =
-      parent_map
+      taxo.parents
       |> Map.get(child, MapSet.new())
       |> MapSet.delete(parent)
 
     # Either update `child` → child_parents or remove `child` if empty
     new_parents =
       if MapSet.size(child_parents) > 0 do
-        Map.put(parent_map, child, child_parents)
+        Map.put(taxo.parents, child, child_parents)
       else
-        Map.delete(parent_map, child)
+        Map.delete(taxo.parents, child)
       end
 
     # Construct a list of {c, p} tuples from the new parent map
@@ -158,7 +175,7 @@ defmodule Taxo do
 
     # Only rebuild if `(contains? (parent-map child) parent)` was true
     # i.e. the link actually existed
-    if parent_map
+    if taxo.parents
        |> Map.get(child, MapSet.new())
        |> MapSet.member?(parent) do
       # Rebuild from an empty hierarchy, calling derive/3 on each pair
@@ -171,16 +188,26 @@ defmodule Taxo do
     end
   end
 
-  defp do_validate_input(taxo, child, parent) do
-    if is_nil(taxo) or is_nil(child) or is_nil(parent) do
-      raise ArgumentError, "expected non-nil taxo, child, and parent"
+  @spec do_validate_input(tag(), tag()) :: :ok
+  defp do_validate_input(child, parent) do
+    if is_nil(child) or is_nil(parent) do
+      raise ArgumentError, "expected non-nil child and parent"
     end
 
     if child == parent do
       raise ArgumentError, "child and parent cannot be the same"
     end
+
+    :ok
   end
 
+  @spec do_transform_derived(
+          %{tag() => MapSet.t(tag())},
+          tag(),
+          %{tag() => MapSet.t(tag())},
+          tag(),
+          %{tag() => MapSet.t(tag())}
+        ) :: %{tag() => MapSet.t(tag())}
   defp do_transform_derived(member_set, source, sources, target, targets) do
     keys =
       [source]

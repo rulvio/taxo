@@ -12,7 +12,8 @@ defmodule Taxo.MixProject do
       package: package(),
       deps: deps(),
       name: "Taxo",
-      source_url: "https://github.com/rulvio/taxo"
+      source_url: "https://github.com/rulvio/taxo",
+      dialyzer: [plt_file: {:no_warn, "priv/plts/dialyzer.plt"}]
     ]
   end
 
@@ -23,7 +24,10 @@ defmodule Taxo.MixProject do
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
-    [{:ex_doc, ">= 0.0.0", only: :dev, runtime: false}]
+    [
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev], runtime: false}
+    ]
   end
 
   defp description() do
