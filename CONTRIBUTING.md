@@ -1,6 +1,6 @@
 # Contributing
 
-Help us to make this project better by contributing. Whether it's new features, bug fixes, or simply improving documentation, your contributions are welcome. Please start with logging a [github issue][1] or submit a pull request.
+Help us make this project better. New features, bug fixes, and documentation fixes are all welcome. Start by logging a [GitHub issue][1], or open a pull request directly.
 
 Before you contribute, please review these guidelines to help ensure a smooth process for everyone.
 
@@ -11,7 +11,7 @@ Thanks.
 * Please browse our [existing issues][1] before logging new issues.
 * Check that the issue has not already been fixed in the `main` branch.
 * Open an issue with a descriptive title and a summary.
-* Please be as clear and explicit as you can in your description of the problem.
+* Describe the problem as clearly as you can.
 * Please state the version of Elixir, erlang/OTP you are using in the description.
 * Include any relevant code in the issue summary.
 
@@ -25,7 +25,7 @@ Thanks.
 * Commit locally and push to your fork until you are happy with your contribution.
 * Make sure to add tests and verify all the tests are passing when merging upstream.
 * Add an entry to the [Changelog][4] accordingly.
-* Please add your name to the CONTRIBUTORS.md file. Adding your name to the CONTRIBUTORS.md file signifies agreement to all rights and reservations provided by the [License][5].
+* Add your name to the CONTRIBUTORS.md file. This means you agree to the terms in the [License][5].
 * [Squash related commits together][6].
 * Open a [pull request][7].
 * The pull request will be reviewed by the community and merged by the project committers.
