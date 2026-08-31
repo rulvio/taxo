@@ -1,6 +1,6 @@
 defmodule Taxo.CyclicDerivationError do
   @moduledoc """
-  Raised by `Taxo.derive/3` when adding a parent/child relationship
+  `Taxo.derive/3` raises this error when a new parent/child relationship
   would create a cycle in the taxonomy.
   """
 

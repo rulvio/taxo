@@ -8,6 +8,10 @@ defmodule TaxoTest do
     assert result == %Taxo{descendants: %{}, ancestors: %{}, parents: %{}}
   end
 
+  test "is_a? helper returns true when child and parent are the same tag" do
+    assert Taxo.new() |> Taxo.is_a?(:monkey, :monkey) == true
+  end
+
   test "is_a? helper returns true when parent is an ancestor of child" do
     assert Taxo.new()
            |> Taxo.derive(:monkey, :mammal)

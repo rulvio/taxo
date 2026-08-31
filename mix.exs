@@ -4,7 +4,7 @@ defmodule Taxo.MixProject do
   def project do
     [
       app: :taxo,
-      version: "0.1.0",
+      version: "0.2.0",
       elixir: "~> 1.18",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -36,7 +36,7 @@ defmodule Taxo.MixProject do
 
   defp package() do
     [
-      files: ~w(lib .formatter.exs mix.exs README.md CHANGELOG.md CONTRIBUTORS.md LICENSE),
+      files: ~w(lib docs .formatter.exs mix.exs README.md CHANGELOG.md CONTRIBUTORS.md LICENSE),
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/rulvio/taxo"}
     ]
